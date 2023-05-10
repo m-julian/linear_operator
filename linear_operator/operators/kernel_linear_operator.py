@@ -138,14 +138,14 @@ class KernelLinearOperator(LinearOperator):
     @cached(name="kernel_diag")
     def _diagonal(self: Float[LinearOperator, "... M N"]) -> Float[torch.Tensor, "... N"]:
         # Explicitly compute kernel diag via covar_func when it is needed rather than relying on lazy tensor ops.
-        # We will do this by shoving all of the data into a batch dimension (i.e. compute a ... x N x 1 x 1 kernel)
+        # We will do this by shoving all of the data into a batch dimension (i.e. compute a ... x N x 1 kernel)
         # and then squeeze out the batch dimensions
         x1 = self.x1.unsqueeze(-2)
         x2 = self.x2.unsqueeze(-2)
         params = [param.unsqueeze(-3) for param in self.params]
         diag_mat = to_dense(self.covar_func(x1, x2, *params, **self.kwargs))
-        assert diag_mat.shape[-2:] == torch.Size([1, 1])
-        return diag_mat[..., 0, 0]
+        assert diag_mat.shape[-1:] == torch.Size([1])
+        return diag_mat[..., 0]
 
     @property
     @cached(name="covar_mat")
